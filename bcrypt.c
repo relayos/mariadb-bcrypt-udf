@@ -171,7 +171,8 @@ char *bcrypt_hash(UDF_INIT *initid, UDF_ARGS *args, char *res, unsigned long *le
   }
 
   /* start salt generation */
-  fprintf(stderr, "[bcrypt_udf] bcrypt_hash(pass_len=%zu, workfactor=%lld)\n", strlen(pass), workfactor);
+  fprintf(stderr, "[bcrypt_udf] bcrypt_hash(pass_len=%zu, workfactor=%lld, buf_size=%d)\n",
+    strlen(pass), workfactor, BCRYPT_HASHSIZE);
 
   if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
     fprintf(stderr, "[bcrypt_udf] open(/dev/urandom) failed: %s\n", strerror(errno));
@@ -200,7 +201,7 @@ char *bcrypt_hash(UDF_INIT *initid, UDF_ARGS *args, char *res, unsigned long *le
 
   /* compute password hash */
   if ((aux = crypt_rn(pass, salt, res, BCRYPT_HASHSIZE)) == NULL) {
-    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when hashing (errno=%d)\n", errno);
+    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when hashing (errno=%d: %s)\n", errno, strerror(errno));
     *is_null = 1;
     return 0;
   }
@@ -255,10 +256,11 @@ long long bcrypt_check(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *er
   
 
   /* compute password hash */
-  fprintf(stderr, "[bcrypt_udf] bcrypt_check(pass_len=%zu, hash_len=%zu, hash=%s)\n", strlen(pass), strlen(hash), hash);
+  fprintf(stderr, "[bcrypt_udf] bcrypt_check(pass_len=%zu, hash_len=%zu, hash=%s, buf_size=%d)\n",
+    strlen(pass), strlen(hash), hash, BCRYPT_HASHSIZE);
 
   if ((aux = crypt_rn(pass, hash, chk_hash, BCRYPT_HASHSIZE)) == NULL) {
-    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when checking hash (errno=%d)\n", errno);
+    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when checking hash (errno=%d: %s)\n", errno, strerror(errno));
     *is_null = 1;
     return 0;
   }
