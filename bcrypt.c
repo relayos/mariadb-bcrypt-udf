@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <my_global.h>
 #include <my_sys.h>
+//#include <m_string.h>
 #include <mysql.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -20,10 +21,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "crypt_blowfish/ow-crypt.h"
+#include "crypt_blowfish/crypt_blowfish.h"
 #include "crypt_blowfish/crypt_gensalt.h"
 
-#define BCRYPT_HASHSIZE	(128)
+#define BCRYPT_HASHSIZE (128)
 #define RANDBYTES (16)
 
 #define PASS_MAXLEN (128)
@@ -193,16 +194,16 @@ char *bcrypt_hash(UDF_INIT *initid, UDF_ARGS *args, char *res, unsigned long *le
     return 0;
   }
 
-  if ((aux = crypt_gensalt_rn("$2b$", workfactor, randb, RANDBYTES, salt, BCRYPT_HASHSIZE)) == NULL) {
-    fprintf(stderr, "[bcrypt_udf] crypt_gensalt_rn() failed\n");
+  if ((aux = _crypt_gensalt_blowfish_rn("$2b$", workfactor, randb, RANDBYTES, salt, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] _crypt_gensalt_blowfish_rn() failed\n");
     *is_null = 1;
     return 0;
   }
   /* end salt generation */
 
   /* compute password hash */
-  if ((aux = crypt_rn(pass, salt, res, BCRYPT_HASHSIZE)) == NULL) {
-    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when hashing (errno=%d: %s)\n", errno, strerror(errno));
+  if ((aux = _crypt_blowfish_rn(pass, salt, res, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] _crypt_blowfish_rn() failed when hashing (errno=%d: %s)\n", errno, strerror(errno));
     *is_null = 1;
     return 0;
   }
@@ -260,8 +261,8 @@ long long bcrypt_check(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *er
   fprintf(stderr, "[bcrypt_udf] bcrypt_check(pass_len=%zu, hash_len=%zu, hash=%s, buf_size=%d)\n",
     strlen(pass), strlen(hash), hash, BCRYPT_HASHSIZE);
 
-  if ((aux = crypt_rn(pass, hash, chk_hash, BCRYPT_HASHSIZE)) == NULL) {
-    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when checking hash (errno=%d: %s)\n", errno, strerror(errno));
+  if ((aux = _crypt_blowfish_rn(pass, hash, chk_hash, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] _crypt_blowfish_rn() failed when checking hash (errno=%d: %s)\n", errno, strerror(errno));
     *is_null = 1;
     return 0;
   }
