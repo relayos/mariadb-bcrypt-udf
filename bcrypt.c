@@ -22,7 +22,7 @@
 
 #include "crypt_blowfish/ow-crypt.h"
 
-#define BCRYPT_HASHSIZE	(64)
+#define BCRYPT_HASHSIZE	(128)
 #define RANDBYTES (16)
 
 #define PASS_MAXLEN (128)
