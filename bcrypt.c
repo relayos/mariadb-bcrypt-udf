@@ -20,7 +20,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define crypt_rn _crypt_blowfish_rn
+#define crypt_gensalt_rn _crypt_gensalt_rn
+
 #include "crypt_blowfish/ow-crypt.h"
+#include "crypt_blowfish/crypt_gensalt.h"
 
 #define BCRYPT_HASHSIZE	(128)
 #define RANDBYTES (16)
