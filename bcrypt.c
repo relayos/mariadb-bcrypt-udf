@@ -10,6 +10,7 @@
  * with this software. If not, see
  * <http://creativecommons.org/publicdomain/zero/1.0/>. */
 
+#include <errno.h>
 #include <my_global.h>
 #include <my_sys.h>
 #include <m_string.h>
@@ -170,12 +171,14 @@ char *bcrypt_hash(UDF_INIT *initid, UDF_ARGS *args, char *res, unsigned long *le
 
   /* start salt generation */
   if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
+    fprintf(stderr, "[bcrypt_udf] open(/dev/urandom) failed: %s\n", strerror(errno));
     *is_null = 1;
     return 0;
   }
 
   if (try_read(fd, randb, RANDBYTES) != 0) {
     try_close(fd);
+    fprintf(stderr, "[bcrypt_udf] try_read(/dev/urandom) failed: %s\n", strerror(errno));
     *is_null = 1;
     return 0;
   }
@@ -186,13 +189,15 @@ char *bcrypt_hash(UDF_INIT *initid, UDF_ARGS *args, char *res, unsigned long *le
   }
 
   if ((aux = crypt_gensalt_rn("$2b$", workfactor, randb, RANDBYTES, salt, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] crypt_gensalt_rn() failed\n");
     *is_null = 1;
-    return 0;    
+    return 0;
   }
   /* end salt generation */
 
   /* compute password hash */
   if ((aux = crypt_rn(pass, salt, res, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when hashing\n");
     *is_null = 1;
     return 0;
   }
@@ -248,6 +253,7 @@ long long bcrypt_check(UDF_INIT *initid, UDF_ARGS *args, char *is_null, char *er
 
   /* compute password hash */
   if ((aux = crypt_rn(pass, hash, chk_hash, BCRYPT_HASHSIZE)) == NULL) {
+    fprintf(stderr, "[bcrypt_udf] crypt_rn() failed when checking hash\n");
     *is_null = 1;
     return 0;
   }
